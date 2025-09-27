@@ -51,11 +51,11 @@ Prerequisites
 
 Install and run
 1. Clone the repo and enter project directory:
-   cd flask
+   cd GreenBin
 2. Install dependencies:
    pip install -r requirements.txt
 3. Run locally:
-   python app.py
+   flask run --host=0.0.0.0 --port=5000
 4. Open: http://localhost:5000
 
 How It Works
