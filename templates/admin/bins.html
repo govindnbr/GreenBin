@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}Trash Bin Management - GreenBin Admin{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-white mb-4">
+            <i class="fas fa-trash-alt me-2"></i>Smart Trash Bin Management
+        </h2>
+    </div>
+</div>
+
+<!-- Bin Status Overview -->
+<div class="row mb-4">
+    {% for bin_stat in bin_stats %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">
+                    <i class="fas fa-trash me-2"></i>{{ bin_stat.bin.bin_id }}
+                </h6>
+                <span class="badge bg-{{ bin_stat.status_color }}">
+                    {{ bin_stat.bin.status.title() }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>Location:</strong> {{ bin_stat.bin.location }}
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Current Load:</strong>
+                    <div class="progress mt-1">
+                        <div class="progress-bar bg-{{ bin_stat.status_color }}" 
+                             style="width: {{ bin_stat.bin.current_load }}%">
+                            {{ bin_stat.bin.current_load }}%
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <small class="text-muted">Items Collected</small>
+                        <div class="fw-bold">{{ bin_stat.drops_count }}</div>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted">Last Emptied</small>
+                        <div class="fw-bold">{{ bin_stat.bin.last_emptied.strftime('%m/%d') }}</div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    {% if bin_stat.bin.current_load >= 90 %}
+                    <button class="btn btn-warning btn-sm" onclick="emptyBin({{ bin_stat.bin.id }})">
+                        <i class="fas fa-broom me-1"></i>Empty Bin
+                    </button>
+                    {% endif %}
+                    
+                    <div class="btn-group" role="group">
+                        <button class="btn btn-outline-primary btn-sm" onclick="updateBinStatus({{ bin_stat.bin.id }}, 'active')">
+                            <i class="fas fa-play me-1"></i>Active
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm" onclick="updateBinStatus({{ bin_stat.bin.id }}, 'maintenance')">
+                            <i class="fas fa-tools me-1"></i>Maintenance
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Bin Management Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cogs me-2"></i>Management Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-plus-circle" style="font-size: 2rem; color: var(--primary-color);"></i>
+                                <h6 class="mt-2">Add New Bin</h6>
+                                <button class="btn btn-primary btn-sm" onclick="showAddBinModal()">
+                                    Add Bin
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-qrcode" style="font-size: 2rem; color: var(--secondary-color);"></i>
+                                <h6 class="mt-2">Generate QR Codes</h6>
+                                <button class="btn btn-success btn-sm" onclick="generateBulkQR()">
+                                    Generate QRs
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line" style="font-size: 2rem; color: var(--accent-color);"></i>
+                                <h6 class="mt-2">View Reports</h6>
+                                <button class="btn btn-info btn-sm" onclick="showReports()">
+                                    View Reports
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notifications -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bell me-2"></i>Notifications & Alerts
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="notifications">
+                    {% for bin_stat in bin_stats %}
+                        {% if bin_stat.bin.current_load >= 90 %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>{{ bin_stat.bin.bin_id }}</strong> at {{ bin_stat.bin.location }} is {{ bin_stat.bin.current_load }}% full and needs emptying.
+                        </div>
+                        {% elif bin_stat.bin.status == 'maintenance' %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-tools me-2"></i>
+                            <strong>{{ bin_stat.bin.bin_id }}</strong> at {{ bin_stat.bin.location }} is under maintenance.
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-check-circle me-2"></i>Success!
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p id="successMessage">Operation completed successfully!</p>
+                <button class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function emptyBin(binId) {
+        if (confirm('Mark this bin as emptied?')) {
+            fetch(`/admin/bins/${binId}/empty`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showSuccessMessage(data.message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
+            });
+        }
+    }
+
+    function updateBinStatus(binId, status) {
+        fetch(`/admin/bins/${binId}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccessMessage(data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred');
+        });
+    }
+
+    function showAddBinModal() {
+        const binId = prompt('Enter new bin ID (e.g., BIN005):');
+        const location = prompt('Enter bin location:');
+        
+        if (binId && location) {
+            // This would normally create a new bin
+            alert('Add bin functionality would be implemented here');
+        }
+    }
+
+    function generateBulkQR() {
+        if (confirm('Generate 10 new QR codes for all active bins?')) {
+            // This would generate QR codes for all bins
+            alert('Bulk QR generation would be implemented here');
+        }
+    }
+
+    function showReports() {
+        alert('Reports functionality would show detailed analytics here');
+    }
+
+    function showSuccessMessage(message) {
+        document.getElementById('successMessage').textContent = message;
+        new bootstrap.Modal(document.getElementById('successModal')).show();
+    }
+
+    // Auto-refresh every 30 seconds
+    setInterval(() => {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}

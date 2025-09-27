@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user.username }} - User Details - Admin - GreenBin</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-green: #4CAF50;
+            --light-green: #81C784;
+            --dark-green: #388E3C;
+            --text-dark: #2E2E2E;
+            --text-light: #757575;
+            --light-gray: #F5F5F5;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--light-green) 0%, #FFFFFF 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-dark);
+        }
+        
+        .admin-header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 15px 0;
+            margin-bottom: 30px;
+        }
+        
+        .admin-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .admin-logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-green);
+        }
+        
+        .admin-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .admin-btn {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-btn:hover {
+            background: var(--dark-green);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .admin-btn.logout {
+            background: #dc3545;
+        }
+        
+        .admin-btn.logout:hover {
+            background: #c82333;
+        }
+        
+        .user-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .user-profile {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .profile-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-green), var(--light-green));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-right: 25px;
+        }
+        
+        .profile-info h2 {
+            margin: 0;
+            color: var(--text-dark);
+            font-weight: bold;
+        }
+        
+        .profile-info p {
+            margin: 5px 0;
+            color: var(--text-light);
+        }
+        
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: var(--light-gray);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-green);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .points-management {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--dark-green);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .points-form {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 15px;
+            align-items: end;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+        
+        .form-control {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-green);
+            outline: none;
+        }
+        
+        .points-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-add {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-add:hover {
+            background: #218838;
+        }
+        
+        .btn-subtract {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-subtract:hover {
+            background: #c82333;
+        }
+        
+        .current-points {
+            background: linear-gradient(135deg, var(--primary-green), var(--light-green));
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .current-points h3 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        
+        .transactions-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .transaction-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .transaction-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
+        }
+        
+        .transaction-item:hover {
+            background: rgba(76, 175, 80, 0.05);
+        }
+        
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .icon-earned { background: linear-gradient(135deg, #4CAF50, #66BB6A); }
+        .icon-redeemed { background: linear-gradient(135deg, #FF6B6B, #FF8E85); }
+        .icon-admin { background: linear-gradient(135deg, #9B59B6, #BB8FCE); }
+        
+        .transaction-content {
+            flex: 1;
+        }
+        
+        .transaction-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+        }
+        
+        .transaction-desc {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 2px;
+        }
+        
+        .transaction-date {
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+        
+        .transaction-points {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .points-positive {
+            color: #28a745;
+        }
+        
+        .points-negative {
+            color: #dc3545;
+        }
+        
+        .empty-transactions {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        
+        .empty-transactions i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .profile-avatar {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+            
+            .points-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .transactions-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Header -->
+    <div class="admin-header">
+        <div class="container">
+            <div class="admin-nav">
+                <div class="admin-logo">
+                    <i class="fas fa-leaf me-2"></i>GreenBin Admin
+                </div>
+                <div class="admin-actions">
+                    <a href="{{ url_for('admin.users_management') }}" class="admin-btn">
+                        <i class="fas fa-users me-2"></i>All Users
+                    </a>
+                    <a href="{{ url_for('admin.dashboard') }}" class="admin-btn">
+                        <i class="fas fa-dashboard me-2"></i>Dashboard
+                    </a>
+                    <a href="{{ url_for('admin.logout') }}" class="admin-btn logout">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="user-container">
+        <!-- User Profile -->
+        <div class="user-profile">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    {{ user.username[0].upper() }}
+                </div>
+                <div class="profile-info">
+                    <h2>{{ user.username }}</h2>
+                    <p><i class="fas fa-envelope me-2"></i>{{ user.email }}</p>
+                    <p><i class="fas fa-calendar me-2"></i>Joined {{ user.created_at.strftime('%B %d, %Y') }}</p>
+                    <p><i class="fas fa-clock me-2"></i>Last seen {{ user.created_at.strftime('%b %d, %Y at %I:%M %p') }}</p>
+                </div>
+            </div>
+            
+            <div class="profile-stats">
+                <div class="stat-card">
+                    <div class="stat-value">{{ user.total_points }}</div>
+                    <div class="stat-label">Current Points</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.total_drops }}</div>
+                    <div class="stat-label">Total Scans</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.total_points_earned }}</div>
+                    <div class="stat-label">Points Earned</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.total_redemptions }}</div>
+                    <div class="stat-label">Redemptions</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Points Management -->
+        <div class="points-management">
+            <div class="section-title">
+                <i class="fas fa-coins"></i>
+                Points Management
+            </div>
+            
+            <div class="alert alert-success" id="successAlert"></div>
+            
+            <div class="current-points">
+                <h3 id="currentPoints">{{ user.total_points }}</h3>
+                <p>Current Points Balance</p>
+            </div>
+            
+            <div class="points-form">
+                <div class="form-group">
+                    <label class="form-label">Points Amount</label>
+                    <input type="number" id="pointsAmount" class="form-control" placeholder="Enter points..." min="1" max="10000">
+                </div>
+                <button class="points-btn btn-add" onclick="managePoints('add')">
+                    <i class="fas fa-plus me-2"></i>Add Points
+                </button>
+                <button class="points-btn btn-subtract" onclick="managePoints('subtract')">
+                    <i class="fas fa-minus me-2"></i>Subtract Points
+                </button>
+            </div>
+        </div>
+        
+        <!-- Transactions -->
+        <div class="transactions-section">
+            <!-- Points Earned -->
+            <div class="transaction-card">
+                <div class="section-title">
+                    <i class="fas fa-arrow-up"></i>
+                    Points Earned ({{ plastic_drops|length }})
+                </div>
+                
+                <div class="transaction-list">
+                    {% if plastic_drops %}
+                        {% for drop in plastic_drops %}
+                        <div class="transaction-item">
+                            <div class="transaction-icon {% if drop.plastic_type == 'admin_adjustment' %}icon-admin{% else %}icon-earned{% endif %}">
+                                {% if drop.plastic_type == 'admin_adjustment' %}
+                                    <i class="fas fa-user-cog"></i>
+                                {% else %}
+                                    <i class="fas fa-recycle"></i>
+                                {% endif %}
+                            </div>
+                            <div class="transaction-content">
+                                <div class="transaction-title">
+                                    {% if drop.plastic_type == 'admin_adjustment' %}
+                                        {% if drop.points_earned > 0 %}Admin Added Points{% else %}Admin Subtracted Points{% endif %}
+                                    {% else %}
+                                        {{ drop.plastic_type.replace('_', ' ').title() }} Recycled
+                                    {% endif %}
+                                </div>
+                                <div class="transaction-desc">
+                                    {% if drop.plastic_type == 'admin_adjustment' %}
+                                        Points adjustment by admin
+                                    {% else %}
+                                        QR Code: {{ drop.qr_code }}
+                                    {% endif %}
+                                </div>
+                                <div class="transaction-date">{{ drop.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+                            </div>
+                            <div class="transaction-points {% if drop.points_earned > 0 %}points-positive{% else %}points-negative{% endif %}">
+                                {% if drop.points_earned > 0 %}+{% endif %}{{ drop.points_earned }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty-transactions">
+                        <i class="fas fa-coins"></i>
+                        <h5>No Points Earned</h5>
+                        <p>User hasn't earned any points yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Redemptions -->
+            <div class="transaction-card">
+                <div class="section-title">
+                    <i class="fas fa-arrow-down"></i>
+                    Redemptions ({{ redemptions|length }})
+                </div>
+                
+                <div class="transaction-list">
+                    {% if redemptions %}
+                        {% for redemption in redemptions %}
+                        <div class="transaction-item">
+                            <div class="transaction-icon icon-redeemed">
+                                <i class="fas fa-gift"></i>
+                            </div>
+                            <div class="transaction-content">
+                                <div class="transaction-title">{{ redemption.redemption_type.replace('_', ' ').title() }}</div>
+                                <div class="transaction-desc">
+                                    {% if redemption.coupon_code %}
+                                        Code: {{ redemption.coupon_code }}
+                                    {% else %}
+                                        ₹{{ "%.0f"|format(redemption.value) }} value
+                                    {% endif %}
+                                </div>
+                                <div class="transaction-date">{{ redemption.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+                            </div>
+                            <div class="transaction-points points-negative">
+                                -{{ redemption.points_used }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="empty-transactions">
+                        <i class="fas fa-gift"></i>
+                        <h5>No Redemptions</h5>
+                        <p>User hasn't made any redemptions yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function managePoints(action) {
+            const pointsAmount = document.getElementById('pointsAmount').value;
+            
+            if (!pointsAmount || pointsAmount <= 0) {
+                alert('Please enter a valid points amount');
+                return;
+            }
+            
+            if (pointsAmount > 10000) {
+                alert('Maximum points per transaction is 10,000');
+                return;
+            }
+            
+            const confirmation = confirm(`Are you sure you want to ${action} ${pointsAmount} points ${action === 'add' ? 'to' : 'from'} this user?`);
+            
+            if (!confirmation) {
+                return;
+            }
+            
+            fetch(`/admin/user/{{ user.id }}/points`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    points: parseInt(pointsAmount),
+                    action: action,
+                    reason: `Admin ${action} points`
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message);
+                    document.getElementById('currentPoints').textContent = data.new_total;
+                    document.getElementById('pointsAmount').value = '';
+                    
+                    // Refresh page after 2 seconds to show updated transaction history
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while managing points');
+            });
+        }
+        
+        function showAlert(message) {
+            const alert = document.getElementById('successAlert');
+            alert.innerHTML = `<i class="fas fa-check-circle me-2"></i>${message}`;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

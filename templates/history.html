@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+
+{% block title %}History - GreenBin{% endblock %}
+
+{% block content %}
+<style>
+    .history-container {
+        padding: 20px 15px;
+        max-width: 100%;
+    }
+    
+    .history-header {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+        border-radius: 20px;
+        padding: 25px;
+        text-align: center;
+        color: white;
+        margin-bottom: 25px;
+        box-shadow: 0 5px 20px rgba(76, 175, 80, 0.3);
+    }
+    
+    .history-title {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+    
+    .history-subtitle {
+        opacity: 0.9;
+        font-size: 1rem;
+    }
+    
+    .filter-tabs {
+        display: flex;
+        background: white;
+        border-radius: 15px;
+        padding: 5px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow-x: auto;
+    }
+    
+    .filter-tab {
+        flex: 1;
+        padding: 12px 15px;
+        text-align: center;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        font-weight: 500;
+        color: var(--text-light);
+        min-width: 100px;
+    }
+    
+    .filter-tab.active {
+        background: var(--primary-green);
+        color: white;
+        box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+    }
+    
+    .filter-tab:hover:not(.active) {
+        background: var(--light-gray);
+    }
+    
+    .history-section {
+        background: white;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .section-header {
+        background: var(--light-gray);
+        padding: 15px 20px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .section-title {
+        font-weight: 600;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+    }
+    
+    .history-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    .history-item {
+        display: flex;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s ease;
+    }
+    
+    .history-item:hover {
+        background: rgba(76, 175, 80, 0.05);
+    }
+    
+    .history-item:last-child {
+        border-bottom: none;
+    }
+    
+    .item-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-right: 15px;
+        color: white;
+    }
+    
+    .icon-points { background: linear-gradient(135deg, #4CAF50, #66BB6A); }
+    .icon-redeem { background: linear-gradient(135deg, #FF6B6B, #FF8E85); }
+    .icon-wallet { background: linear-gradient(135deg, #4ECDC4, #5DADE2); }
+    .icon-scan { background: linear-gradient(135deg, #9B59B6, #BB8FCE); }
+    
+    .item-content {
+        flex: 1;
+    }
+    
+    .item-title {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 4px;
+        font-size: 1rem;
+    }
+    
+    .item-desc {
+        color: var(--text-light);
+        font-size: 0.9rem;
+        margin-bottom: 2px;
+    }
+    
+    .item-date {
+        color: var(--text-light);
+        font-size: 0.8rem;
+    }
+    
+    .item-value {
+        text-align: right;
+    }
+    
+    .value-amount {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+    }
+    
+    .value-positive {
+        color: #28a745;
+    }
+    
+    .value-negative {
+        color: #dc3545;
+    }
+    
+    .value-neutral {
+        color: var(--primary-green);
+    }
+    
+    .status-badge {
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-failed {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-light);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+    
+    .empty-state p {
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    
+    .hidden {
+        display: none;
+    }
+    
+    @media (max-width: 768px) {
+        .filter-tabs {
+            padding: 3px;
+        }
+        
+        .filter-tab {
+            padding: 10px 8px;
+            font-size: 0.9rem;
+            min-width: 80px;
+        }
+        
+        .history-item {
+            padding: 12px 15px;
+        }
+        
+        .item-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+            margin-right: 12px;
+        }
+        
+        .item-title {
+            font-size: 0.95rem;
+        }
+        
+        .item-desc {
+            font-size: 0.85rem;
+        }
+        
+        .value-amount {
+            font-size: 1rem;
+        }
+        
+        .section-header {
+            padding: 12px 15px;
+        }
+        
+        .section-title {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<div class="history-container">
+    <!-- Header -->
+    <div class="history-header">
+        <div class="history-title">
+            <i class="fas fa-history"></i>
+            Transaction History
+        </div>
+        <div class="history-subtitle">View your complete activity timeline</div>
+    </div>
+    
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <div class="filter-tab active" onclick="showHistory('all')">
+            <i class="fas fa-list"></i> All
+        </div>
+        <div class="filter-tab" onclick="showHistory('points')">
+            <i class="fas fa-coins"></i> Points
+        </div>
+        <div class="filter-tab" onclick="showHistory('redeems')">
+            <i class="fas fa-gift"></i> Redeems
+        </div>
+        <div class="filter-tab" onclick="showHistory('wallet')">
+            <i class="fas fa-wallet"></i> Wallet
+        </div>
+    </div>
+    
+    <!-- All History -->
+    <div id="all-history" class="history-section">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fas fa-list"></i>
+                All Transactions
+            </div>
+        </div>
+        <div class="history-list">
+            {% set all_items = (point_history + redeem_history + wallet_history) | sort(attribute='created_at', reverse=true) %}
+            {% if all_items %}
+                {% for item in all_items %}
+                <div class="history-item">
+                    <div class="item-icon {% if item.type == 'points' %}icon-points{% elif item.type == 'redeem' %}icon-redeem{% else %}icon-wallet{% endif %}">
+                        {% if item.type == 'points' %}
+                            <i class="fas fa-recycle"></i>
+                        {% elif item.type == 'redeem' %}
+                            <i class="fas fa-gift"></i>
+                        {% else %}
+                            <i class="fas fa-money-bill-wave"></i>
+                        {% endif %}
+                    </div>
+                    <div class="item-content">
+                        <div class="item-title">{{ item.title }}</div>
+                        <div class="item-desc">{{ item.description }}</div>
+                        <div class="item-date">{{ item.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+                    </div>
+                    <div class="item-value">
+                        <div class="value-amount {% if item.type == 'points' %}value-positive{% elif item.type == 'wallet' %}value-negative{% else %}value-neutral{% endif %}">
+                            {% if item.type == 'points' %}+{{ item.points }}{% elif item.type == 'wallet' %}-{{ item.points }}{% else %}{{ item.points }}{% endif %} pts
+                        </div>
+                        {% if item.status %}
+                        <div class="status-badge status-{{ item.status }}">
+                            {{ item.status.title() }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-history"></i>
+                <p>No transactions yet!</p>
+                <small>Start recycling to see your activity history</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Points History -->
+    <div id="points-history" class="history-section hidden">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fas fa-coins"></i>
+                Points Earned
+            </div>
+        </div>
+        <div class="history-list">
+            {% if point_history %}
+                {% for item in point_history %}
+                <div class="history-item">
+                    <div class="item-icon icon-scan">
+                        <i class="fas fa-recycle"></i>
+                    </div>
+                    <div class="item-content">
+                        <div class="item-title">{{ item.plastic_type.replace('_', ' ').title() }} Recycled</div>
+                        <div class="item-desc">Scanned and processed successfully</div>
+                        <div class="item-date">{{ item.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+                    </div>
+                    <div class="item-value">
+                        <div class="value-amount value-positive">+{{ item.points_earned }} pts</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-coins"></i>
+                <p>No points earned yet!</p>
+                <small>Start scanning plastic items to earn points</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Redeem History -->
+    <div id="redeems-history" class="history-section hidden">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fas fa-gift"></i>
+                Redemptions
+            </div>
+        </div>
+        <div class="history-list">
+            {% if redeem_history %}
+                {% for item in redeem_history %}
+                <div class="history-item">
+                    <div class="item-icon icon-redeem">
+                        <i class="fas fa-gift"></i>
+                    </div>
+                    <div class="item-content">
+                        <div class="item-title">{{ item.redemption_type.replace('_', ' ').title() }}</div>
+                        <div class="item-desc">
+                            {% if item.coupon_code %}
+                                Code: {{ item.coupon_code }}
+                            {% else %}
+                                ₹{{ "%.0f"|format(item.value) }} value
+                            {% endif %}
+                        </div>
+                        <div class="item-date">{{ item.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+                    </div>
+                    <div class="item-value">
+                        <div class="value-amount value-neutral">{{ item.points_used }} pts</div>
+                        <div class="status-badge status-{{ item.status }}">
+                            {{ item.status.title() }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-gift"></i>
+                <p>No redemptions yet!</p>
+                <small>Earn points and redeem them for rewards</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Wallet History -->
+    <div id="wallet-history" class="history-section hidden">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fas fa-wallet"></i>
+                Wallet Transactions
+            </div>
+        </div>
+        <div class="history-list">
+            {% if wallet_history %}
+                {% for item in wallet_history %}
+                <div class="history-item">
+                    <div class="item-icon icon-wallet">
+                        {% if item.method == 'bank' %}
+                            <i class="fas fa-university"></i>
+                        {% else %}
+                            <i class="fas fa-mobile-alt"></i>
+                        {% endif %}
+                    </div>
+                    <div class="item-content">
+                        <div class="item-title">
+                            {{ 'Bank Transfer' if item.method == 'bank' else 'UPI Payment' }}
+                        </div>
+                        <div class="item-desc">₹{{ item.amount }} withdrawal</div>
+                        <div class="item-date">{{ item.created_at.strftime('%b %d, %Y at %I:%M %p') }}</div>
+                    </div>
+                    <div class="item-value">
+                        <div class="value-amount value-negative">-{{ item.points_used }} pts</div>
+                        <div class="status-badge status-{{ item.status }}">
+                            {{ item.status.title() }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-wallet"></i>
+                <p>No wallet transactions yet!</p>
+                <small>Make withdrawals to see transaction history</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showHistory(type) {
+    // Remove active class from all tabs
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Hide all history sections
+    document.querySelectorAll('.history-section').forEach(section => {
+        section.classList.add('hidden');
+    });
+    
+    // Show selected section and activate tab
+    if (type === 'all') {
+        document.getElementById('all-history').classList.remove('hidden');
+        document.querySelector('.filter-tab').classList.add('active');
+    } else if (type === 'points') {
+        document.getElementById('points-history').classList.remove('hidden');
+        document.querySelectorAll('.filter-tab')[1].classList.add('active');
+    } else if (type === 'redeems') {
+        document.getElementById('redeems-history').classList.remove('hidden');
+        document.querySelectorAll('.filter-tab')[2].classList.add('active');
+    } else if (type === 'wallet') {
+        document.getElementById('wallet-history').classList.remove('hidden');
+        document.querySelectorAll('.filter-tab')[3].classList.add('active');
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    showHistory('all');
+});
+</script>
+{% endblock %}

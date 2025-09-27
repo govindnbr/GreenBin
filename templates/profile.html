@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - GreenBin{% endblock %}
+
+{% block content %}
+<style>
+    .profile-container {
+        padding: 20px 15px;
+        max-width: 100%;
+    }
+    
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+        border-radius: 25px;
+        padding: 30px;
+        text-align: center;
+        color: white;
+        margin-bottom: 25px;
+        box-shadow: 0 10px 30px rgba(76, 175, 80, 0.3);
+    }
+    
+    .profile-avatar {
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 3rem;
+        backdrop-filter: blur(10px);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .profile-name {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+    
+    .profile-email {
+        opacity: 0.9;
+        margin-bottom: 15px;
+    }
+    
+    .points-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 10px 20px;
+        border-radius: 50px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .profile-section {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        border: 1px solid rgba(76, 175, 80, 0.1);
+    }
+    
+    .section-title {
+        color: var(--primary-green);
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .editable-field {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        background: var(--light-gray);
+        border-radius: 15px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .editable-field:hover {
+        background: rgba(76, 175, 80, 0.05);
+        border: 1px solid rgba(76, 175, 80, 0.2);
+    }
+    
+    .field-label {
+        font-weight: 600;
+        color: var(--text-dark);
+        min-width: 100px;
+    }
+    
+    .field-value {
+        flex: 1;
+        margin: 0 15px;
+        color: var(--text-dark);
+    }
+    
+    .edit-btn {
+        background: var(--primary-green);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .edit-btn:hover {
+        background: var(--dark-green);
+        transform: translateY(-1px);
+    }
+    
+    .field-input {
+        flex: 1;
+        margin: 0 15px;
+        padding: 8px 12px;
+        border: 2px solid var(--primary-green);
+        border-radius: 10px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .field-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+    }
+    
+    .save-btn, .cancel-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        margin-left: 5px;
+        transition: all 0.3s ease;
+    }
+    
+    .save-btn {
+        background: var(--primary-green);
+        color: white;
+    }
+    
+    .cancel-btn {
+        background: var(--text-light);
+        color: white;
+    }
+</style>
+
+<div class="profile-container">
+    <!-- Profile Header -->
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="profile-name">{{ user.username }}</div>
+        <div class="profile-email">{{ user.email }}</div>
+        <div class="points-badge">
+            <i class="fas fa-coins"></i>
+            {{ user.total_points }} EcoPoints
+        </div>
+    </div>
+    
+    <!-- Account Information -->
+    <div class="profile-section">
+        <div class="section-title">
+            <i class="fas fa-user-edit"></i>
+            Account Information
+        </div>
+        
+        <!-- Username Field -->
+        <div class="editable-field" id="username-field">
+            <div class="field-label">Username:</div>
+            <div class="field-value" id="username-value">{{ user.username }}</div>
+            <button class="edit-btn" onclick="editField('username', '{{ user.username }}')">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+        </div>
+        
+        <!-- Email Field -->
+        <div class="editable-field" id="email-field">
+            <div class="field-label">Email:</div>
+            <div class="field-value" id="email-value">{{ user.email }}</div>
+            <button class="edit-btn" onclick="editField('email', '{{ user.email }}')">
+                <i class="fas fa-edit"></i> Edit
+            </button>
+        </div>
+        
+        <!-- Read-only Fields -->
+        <div class="editable-field">
+            <div class="field-label">Member Since:</div>
+            <div class="field-value">{{ user.created_at.strftime('%B %d, %Y') }}</div>
+            <span style="color: var(--primary-green); font-weight: 600;">
+                <i class="fas fa-calendar-check"></i>
+            </span>
+        </div>
+        
+        <div class="editable-field">
+            <div class="field-label">Account Type:</div>
+            <div class="field-value">
+                <span style="background: {{ 'linear-gradient(135deg, #ffc107, #fd7e14)' if user.is_admin else 'linear-gradient(135deg, var(--primary-green), var(--light-green))' }}; 
+                             color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">
+                    <i class="fas fa-{{ 'crown' if user.is_admin else 'user' }}"></i>
+                    {{ 'Administrator' if user.is_admin else 'Regular User' }}
+                </span>
+            </div>
+            <span style="color: var(--primary-green); font-weight: 600;">
+                <i class="fas fa-shield-alt"></i>
+            </span>
+        </div>
+    </div>
+    
+    <!-- Statistics Section -->
+    <div class="profile-section">
+        <div class="section-title">
+            <i class="fas fa-chart-line"></i>
+            Your Statistics
+        </div>
+        
+        <div class="stats-grid">
+            <!-- Items Recycled -->
+            <div class="stat-card stat-card-1">
+                <div class="stat-icon">
+                    <i class="fas fa-recycle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ user.plastic_drops|length }}</div>
+                    <div class="stat-label">Items Recycled</div>
+                </div>
+                <div class="stat-wave"></div>
+            </div>
+            
+            <!-- Total Points -->
+            <div class="stat-card stat-card-2">
+                <div class="stat-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ user.total_points }}</div>
+                    <div class="stat-label">Total Points</div>
+                </div>
+                <div class="stat-wave"></div>
+            </div>
+            
+            <!-- Redemptions -->
+            <div class="stat-card stat-card-3">
+                <div class="stat-icon">
+                    <i class="fas fa-gift"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ user.redemptions|length }}</div>
+                    <div class="stat-label">Redemptions</div>
+                </div>
+                <div class="stat-wave"></div>
+            </div>
+            
+            <!-- KG Saved -->
+            <div class="stat-card stat-card-4">
+                <div class="stat-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-number">{{ ((user.plastic_drops|length) * 0.5)|round(1) }}</div>
+                    <div class="stat-label">KG Saved</div>
+                </div>
+                <div class="stat-wave"></div>
+            </div>
+        </div>
+        
+        <!-- Environmental Impact -->
+        <div class="impact-card">
+            <div class="impact-content">
+                <div class="impact-icon">🌍</div>
+                <div class="impact-text">
+                    <div class="impact-title">Environmental Impact</div>
+                    <div class="impact-desc">You've saved {{ (user.plastic_drops|length / 10)|round }} trees and prevented {{ ((user.plastic_drops|length) * 0.5)|round(1) }}kg of plastic waste!</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Logout Section -->
+    <div class="profile-section logout-section">
+        <a href="{{ url_for('auth.logout') }}" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+    
+    .stat-card {
+        position: relative;
+        padding: 25px;
+        border-radius: 20px;
+        color: white;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    }
+    
+    .stat-card-1 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-card-2 {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .stat-card-3 {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .stat-card-4 {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .stat-icon {
+        font-size: 3rem;
+        opacity: 0.7;
+        margin-right: 20px;
+    }
+    
+    .stat-content {
+        flex: 1;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .stat-label {
+        font-size: 1rem;
+        opacity: 0.9;
+        font-weight: 500;
+    }
+    
+    .stat-wave {
+        position: absolute;
+        bottom: -50px;
+        right: -50px;
+        width: 100px;
+        height: 100px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        animation: wave 3s ease-in-out infinite;
+    }
+    
+    @keyframes wave {
+        0%, 100% { transform: scale(1) rotate(0deg); }
+        50% { transform: scale(1.1) rotate(180deg); }
+    }
+    
+    .impact-card {
+        background: linear-gradient(135deg, var(--primary-green) 0%, var(--light-green) 100%);
+        border-radius: 20px;
+        padding: 25px;
+        color: white;
+        margin-top: 20px;
+    }
+    
+    .impact-content {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    
+    .impact-icon {
+        font-size: 3rem;
+        opacity: 0.8;
+    }
+    
+    .impact-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+    
+    .impact-desc {
+        opacity: 0.9;
+        line-height: 1.5;
+    }
+    
+    .logout-section {
+        text-align: center;
+        background: var(--light-gray);
+        border: 2px dashed rgba(76, 175, 80, 0.3);
+    }
+    
+    .logout-btn {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+    }
+    
+    .logout-btn:hover {
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        text-decoration: none;
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-card {
+            padding: 20px;
+            min-height: 120px;
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+        }
+        
+        .impact-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 15px;
+        }
+    }
+</style>
+
+<script>
+function editField(fieldName, currentValue) {
+    const fieldElement = document.getElementById(fieldName + '-field');
+    const valueElement = document.getElementById(fieldName + '-value');
+    
+    // Create input field
+    const input = document.createElement('input');
+    input.type = fieldName === 'email' ? 'email' : 'text';
+    input.value = currentValue;
+    input.className = 'field-input';
+    input.id = fieldName + '-input';
+    
+    // Create save button
+    const saveBtn = document.createElement('button');
+    saveBtn.innerHTML = '<i class="fas fa-check"></i>';
+    saveBtn.className = 'save-btn';
+    saveBtn.onclick = () => saveField(fieldName);
+    
+    // Create cancel button
+    const cancelBtn = document.createElement('button');
+    cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+    cancelBtn.className = 'cancel-btn';
+    cancelBtn.onclick = () => cancelEdit(fieldName, currentValue);
+    
+    // Replace content
+    valueElement.replaceWith(input);
+    fieldElement.querySelector('.edit-btn').replaceWith(saveBtn, cancelBtn);
+    
+    // Focus input
+    input.focus();
+    input.select();
+}
+
+function saveField(fieldName) {
+    const input = document.getElementById(fieldName + '-input');
+    const newValue = input.value.trim();
+    
+    if (!newValue) {
+        alert('Please enter a valid ' + fieldName);
+        return;
+    }
+    
+    // Here you would normally send an AJAX request to update the server
+    // For now, we'll just update the UI
+    alert('This feature would update your ' + fieldName + ' to: ' + newValue + '\n(Server integration needed)');
+    
+    // Reset to view mode
+    cancelEdit(fieldName, newValue);
+}
+
+function cancelEdit(fieldName, originalValue) {
+    const input = document.getElementById(fieldName + '-input');
+    const fieldElement = document.getElementById(fieldName + '-field');
+    
+    // Create value display
+    const valueDiv = document.createElement('div');
+    valueDiv.className = 'field-value';
+    valueDiv.id = fieldName + '-value';
+    valueDiv.textContent = originalValue;
+    
+    // Create edit button
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit-btn';
+    editBtn.innerHTML = '<i class="fas fa-edit"></i> Edit';
+    editBtn.onclick = () => editField(fieldName, originalValue);
+    
+    // Replace content
+    input.replaceWith(valueDiv);
+    const buttons = fieldElement.querySelectorAll('.save-btn, .cancel-btn');
+    buttons.forEach(btn => btn.remove());
+    fieldElement.appendChild(editBtn);
+}
+
+// Add stats card hover effects
+document.addEventListener('DOMContentLoaded', function() {
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+});
+</script>
+{% endblock %}

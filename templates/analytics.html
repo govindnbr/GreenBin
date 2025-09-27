@@ -1,0 +1,575 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - GreenBin{% endblock %}
+
+{% block content %}
+<style>
+    .analytics-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px 15px;
+    }
+    
+    .analytics-title {
+        color: var(--white);
+        font-size: 1.8rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    
+    .analytics-subtitle {
+        color: var(--text-light);
+        font-size: 0.95rem;
+        margin-bottom: 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 30px;
+        padding: 0 15px;
+    }
+
+    @media (min-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+    }
+
+    .eco-stats-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 20px 15px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(76, 175, 80, 0.1);
+        border: 1px solid rgba(76, 175, 80, 0.1);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .eco-stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(76, 175, 80, 0.2);
+    }
+
+    .eco-stats-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-green);
+    }
+
+    .card-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        margin: 0 auto 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--white);
+        position: relative;
+    }
+
+    .card-icon.recycle {
+        background: linear-gradient(135deg, var(--primary-green), var(--light-green));
+    }
+
+    .card-icon.points {
+        background: linear-gradient(135deg, #66BB6A, #4CAF50);
+    }
+
+    .card-icon.plastic {
+        background: linear-gradient(135deg, #81C784, var(--eco-green));
+    }
+
+    .card-icon.daily {
+        background: linear-gradient(135deg, var(--eco-green), var(--dark-green));
+    }
+
+    .stats-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary-green);
+        margin-bottom: 5px;
+        line-height: 1;
+    }
+
+    .stats-label {
+        font-size: 0.85rem;
+        color: var(--text-light);
+        font-weight: 500;
+        line-height: 1.2;
+    }
+
+    .chart-container {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 20px rgba(76, 175, 80, 0.08);
+        border: 1px solid rgba(76, 175, 80, 0.1);
+    }
+
+    .chart-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--light-gray);
+    }
+
+    .chart-icon {
+        width: 40px;
+        height: 40px;
+        background: var(--primary-green);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--white);
+        margin-right: 12px;
+    }
+
+    .chart-title {
+        color: var(--primary-green);
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    @media (max-width: 767px) {
+        .analytics-title {
+            font-size: 1.5rem;
+        }
+        
+        .stats-number {
+            font-size: 1.5rem;
+        }
+        
+        .card-icon {
+            width: 45px;
+            height: 45px;
+            font-size: 1.3rem;
+        }
+        
+        .chart-container {
+            margin: 0 15px 20px;
+        }
+    }
+</style>
+
+<!-- Analytics Header -->
+<div class="analytics-header">
+    <h1 class="analytics-title">
+        <i class="fas fa-chart-line me-2"></i>Your Eco Analytics
+    </h1>
+    <p class="analytics-subtitle">Track your environmental impact and recycling progress</p>
+</div>
+
+<!-- Summary Stats -->
+<div class="stats-grid">
+    <div class="eco-stats-card">
+        <div class="card-icon recycle">
+            <i class="fas fa-trash-alt"></i>
+        </div>
+        <div class="stats-number">{{ total_drops }}</div>
+        <div class="stats-label">Items Recycled</div>
+    </div>
+    
+    <div class="eco-stats-card">
+        <div class="card-icon points">
+            <i class="fas fa-coins"></i>
+        </div>
+        <div class="stats-number">{{ total_points }}</div>
+        <div class="stats-label">EcoPoints Earned</div>
+    </div>
+    
+    <div class="eco-stats-card">
+        <div class="card-icon plastic">
+            <i class="fas fa-leaf"></i>
+        </div>
+        <div class="stats-number">{{ (total_drops * 0.5)|round(1) }}</div>
+        <div class="stats-label">KG Plastic Saved</div>
+    </div>
+    
+    <div class="eco-stats-card">
+        <div class="card-icon daily">
+            <i class="fas fa-seedling"></i>
+        </div>
+        <div class="stats-number">{{ (total_drops / 30)|round(1) }}</div>
+        <div class="stats-label">Daily Average</div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row" style="margin: 0;">
+    <!-- Monthly Chart -->
+    <div class="col-md-6 mb-4" style="padding: 0 15px;">
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="chart-title">Monthly Progress</h3>
+            </div>
+            <canvas id="monthlyChart" height="200"></canvas>
+        </div>
+    </div>
+
+    <!-- Weekly Chart -->
+    <div class="col-md-6 mb-4" style="padding: 0 15px;">
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-icon">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <h3 class="chart-title">Weekly Activity</h3>
+            </div>
+            <canvas id="weeklyChart" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="row" style="margin: 0;">
+    <!-- Points vs Items Chart -->
+    <div class="col-md-8 mb-4" style="padding: 0 15px;">
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-icon">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <h3 class="chart-title">Points vs Items Over Time</h3>
+            </div>
+            <canvas id="pointsItemsChart" height="120"></canvas>
+        </div>
+    </div>
+
+    <!-- Environmental Impact -->
+    <div class="col-md-4 mb-4" style="padding: 0 15px;">
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-icon">
+                    <i class="fas fa-leaf"></i>
+                </div>
+                <h3 class="chart-title">Environmental Impact</h3>
+            </div>
+            
+            <div class="text-center mb-4">
+                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-green), var(--light-green)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+                    <i class="fas fa-tree" style="font-size: 2.5rem; color: white;"></i>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: var(--text-dark); font-weight: 500; font-size: 0.9rem;">Plastic Waste Diverted</span>
+                    <span style="color: var(--primary-green); font-weight: 600;">{{ (total_drops * 0.5)|round(1) }} kg</span>
+                </div>
+                <div class="progress" style="height: 8px; border-radius: 10px; background-color: var(--light-gray);">
+                    <div class="progress-bar" style="background: linear-gradient(90deg, var(--primary-green), var(--light-green)); border-radius: 10px; width: {{ (total_drops / 100 * 100)|int if (total_drops / 100 * 100)|int <= 100 else 100 }}%;"></div>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="color: var(--text-dark); font-weight: 500; font-size: 0.9rem;">CO2 Emissions Saved</span>
+                    <span style="color: var(--primary-green); font-weight: 600;">{{ (total_drops * 2.3)|round(1) }} kg</span>
+                </div>
+                <div class="progress" style="height: 8px; border-radius: 10px; background-color: var(--light-gray);">
+                    <div class="progress-bar" style="background: linear-gradient(90deg, var(--eco-green), var(--primary-green)); border-radius: 10px; width: {{ (total_drops / 50 * 100)|int if (total_drops / 50 * 100)|int <= 100 else 100 }}%;"></div>
+                </div>
+            </div>
+            
+            <div class="text-center" style="background: var(--light-gray); padding: 15px; border-radius: 15px; margin-top: 20px;">
+                <i class="fas fa-seedling" style="color: var(--primary-green); font-size: 1.2rem; margin-bottom: 5px;"></i>
+                <div style="color: var(--text-dark); font-weight: 600; font-size: 0.9rem;">
+                    Equivalent to planting <span style="color: var(--primary-green);">{{ (total_drops / 10)|round }} trees</span>!
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Achievements -->
+<div class="chart-container" style="margin: 0 15px 30px;">
+    <div class="chart-header">
+        <div class="chart-icon">
+            <i class="fas fa-trophy"></i>
+        </div>
+        <h3 class="chart-title">Achievements & Milestones</h3>
+    </div>
+    
+    <div class="achievements-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+        <div class="achievement-card {{ 'earned' if total_drops >= 1 else 'locked' }}" 
+             style="background: var(--white); border: 2px solid {{ 'var(--primary-green)' if total_drops >= 1 else 'var(--light-gray)' }}; 
+                    border-radius: 15px; padding: 20px; text-align: center; 
+                    transition: all 0.3s ease;">
+            <div style="width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px; 
+                        background: {{ 'linear-gradient(135deg, var(--primary-green), var(--light-green))' if total_drops >= 1 else 'var(--light-gray)' }}; 
+                        display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-medal" style="font-size: 1.8rem; color: {{ 'white' if total_drops >= 1 else 'var(--text-light)' }};"></i>
+            </div>
+            <h6 style="color: {{ 'var(--primary-green)' if total_drops >= 1 else 'var(--text-light)' }}; font-weight: 600; margin-bottom: 5px;">First Drop</h6>
+            <small style="color: var(--text-light); font-size: 0.8rem;">Recycle your first item</small>
+        </div>
+        
+        <div class="achievement-card {{ 'earned' if total_drops >= 10 else 'locked' }}" 
+             style="background: var(--white); border: 2px solid {{ 'var(--primary-green)' if total_drops >= 10 else 'var(--light-gray)' }}; 
+                    border-radius: 15px; padding: 20px; text-align: center; 
+                    transition: all 0.3s ease;">
+            <div style="width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px; 
+                        background: {{ 'linear-gradient(135deg, var(--eco-green), var(--primary-green))' if total_drops >= 10 else 'var(--light-gray)' }}; 
+                        display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-star" style="font-size: 1.8rem; color: {{ 'white' if total_drops >= 10 else 'var(--text-light)' }};"></i>
+            </div>
+            <h6 style="color: {{ 'var(--primary-green)' if total_drops >= 10 else 'var(--text-light)' }}; font-weight: 600; margin-bottom: 5px;">Eco Warrior</h6>
+            <small style="color: var(--text-light); font-size: 0.8rem;">Recycle 10 items</small>
+        </div>
+        
+        <div class="achievement-card {{ 'earned' if total_drops >= 50 else 'locked' }}" 
+             style="background: var(--white); border: 2px solid {{ 'var(--primary-green)' if total_drops >= 50 else 'var(--light-gray)' }}; 
+                    border-radius: 15px; padding: 20px; text-align: center; 
+                    transition: all 0.3s ease;">
+            <div style="width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px; 
+                        background: {{ 'linear-gradient(135deg, var(--light-green), var(--eco-green))' if total_drops >= 50 else 'var(--light-gray)' }}; 
+                        display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-crown" style="font-size: 1.8rem; color: {{ 'white' if total_drops >= 50 else 'var(--text-light)' }};"></i>
+            </div>
+            <h6 style="color: {{ 'var(--primary-green)' if total_drops >= 50 else 'var(--text-light)' }}; font-weight: 600; margin-bottom: 5px;">Recycling King</h6>
+            <small style="color: var(--text-light); font-size: 0.8rem;">Recycle 50 items</small>
+        </div>
+        
+        <div class="achievement-card {{ 'earned' if total_points >= 500 else 'locked' }}" 
+             style="background: var(--white); border: 2px solid {{ 'var(--primary-green)' if total_points >= 500 else 'var(--light-gray)' }}; 
+                    border-radius: 15px; padding: 20px; text-align: center; 
+                    transition: all 0.3s ease;">
+            <div style="width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 15px; 
+                        background: {{ 'linear-gradient(135deg, var(--dark-green), var(--primary-green))' if total_points >= 500 else 'var(--light-gray)' }}; 
+                        display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-gem" style="font-size: 1.8rem; color: {{ 'white' if total_points >= 500 else 'var(--text-light)' }};"></i>
+            </div>
+            <h6 style="color: {{ 'var(--primary-green)' if total_points >= 500 else 'var(--text-light)' }}; font-weight: 600; margin-bottom: 5px;">Point Master</h6>
+            <small style="color: var(--text-light); font-size: 0.8rem;">Earn 500 points</small>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media (min-width: 768px) {
+        .achievements-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+        }
+    }
+    
+    .achievement-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(76, 175, 80, 0.15);
+    }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Monthly Chart
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    const monthlyData = {{ monthly_data|tojson|safe }};
+    
+    new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: monthlyData.map(item => item.month),
+            datasets: [{
+                label: 'Items Recycled',
+                data: monthlyData.map(item => item.drops),
+                borderColor: '#4CAF50',
+                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#4CAF50',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2
+            }, {
+                label: 'Points Earned',
+                data: monthlyData.map(item => item.points),
+                borderColor: '#66BB6A', 
+                backgroundColor: 'rgba(102, 187, 106, 0.1)',
+                tension: 0.4,
+                fill: false,
+                yAxisID: 'y1',
+                pointBackgroundColor: '#66BB6A',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#4CAF50',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#81C784'
+                    },
+                    grid: {
+                        color: 'rgba(76, 175, 80, 0.1)'
+                    }
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#81C784'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#81C784'
+                    },
+                    grid: {
+                        color: 'rgba(76, 175, 80, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Weekly Chart
+    const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+    const weeklyData = {{ weekly_data|tojson|safe }};
+    
+    new Chart(weeklyCtx, {
+        type: 'bar',
+        data: {
+            labels: weeklyData.map(item => item.week),
+            datasets: [{
+                label: 'Items Recycled',
+                data: weeklyData.map(item => item.drops),
+                backgroundColor: 'rgba(76, 175, 80, 0.8)',
+                borderColor: '#4CAF50',
+                borderWidth: 2,
+                borderRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#4CAF50',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#81C784'
+                    },
+                    grid: {
+                        color: 'rgba(76, 175, 80, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#81C784'
+                    },
+                    grid: {
+                        color: 'rgba(76, 175, 80, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Points vs Items Chart
+    const pointsItemsCtx = document.getElementById('pointsItemsChart').getContext('2d');
+    
+    new Chart(pointsItemsCtx, {
+        type: 'line',
+        data: {
+            labels: monthlyData.map(item => item.month),
+            datasets: [{
+                label: 'Items',
+                data: monthlyData.map(item => item.drops),
+                borderColor: '#4CAF50',
+                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointBackgroundColor: '#4CAF50',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2
+            }, {
+                label: 'Points',
+                data: monthlyData.map(item => item.points),
+                borderColor: '#81C784',
+                backgroundColor: 'rgba(129, 199, 132, 0.1)',
+                tension: 0.4,
+                fill: false,
+                pointBackgroundColor: '#81C784',
+                pointBorderColor: '#ffffff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#4CAF50',
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#81C784'
+                    },
+                    grid: {
+                        color: 'rgba(76, 175, 80, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        color: '#81C784'
+                    },
+                    grid: {
+                        color: 'rgba(76, 175, 80, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}
